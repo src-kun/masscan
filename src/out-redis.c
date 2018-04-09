@@ -306,6 +306,7 @@ redis_out_banner(struct Output *out, FILE *fp, time_t timestamp,
     UNUSEDPARM(ip);
     UNUSEDPARM(ip_proto);
     UNUSEDPARM(port);
+	LOG(0, "redis: unexpected response from redis server: %d\n", port);
     UNUSEDPARM(proto);
     UNUSEDPARM(px);
     UNUSEDPARM(length);

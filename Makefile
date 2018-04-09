@@ -93,11 +93,13 @@ OBJ = $(addprefix tmp/, $(notdir $(addsuffix .o, $(basename $(SRC)))))
 
 
 bin/masscan: $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS) $(LIBS)
+	cd lib/hiredis/ && make && cd ../../
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LDFLAGS) $(LIBS) -L./lib/hiredis -lhiredis -lcrypt
 
 clean:
 	rm -f tmp/*.o
 	rm -f bin/masscan
+	cd lib/hiredis/ && make clean && cd ../../
 
 regress: bin/masscan
 	bin/masscan --selftest

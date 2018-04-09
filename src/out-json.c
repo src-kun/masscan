@@ -1,8 +1,11 @@
 #include "output.h"
 #include "masscan-app.h"
+#include "masscan.h"
 #include "masscan-status.h"
 #include "string_s.h"
+#include "redis.h"
 #include <ctype.h>
+
 
 
 /****************************************************************************
@@ -10,8 +13,10 @@
 static void
 json_out_open(struct Output *out, FILE *fp)
 {
+	char result_buffer[128];
     UNUSEDPARM(out);
-    fprintf(fp, "[\n"); // enclose the atomic {}'s into an []
+	sprintf_s(result_buffer, sizeof(result_buffer), "{\"status\":\"running\", \"results\":\"%s\"}", out->masscan->map_key);
+	set((const unsigned char *)out->masscan->key, (const unsigned char *)result_buffer);
 }
 
 
@@ -20,8 +25,10 @@ json_out_open(struct Output *out, FILE *fp)
 static void
 json_out_close(struct Output *out, FILE *fp)
 {
+	char result_buffer[128];
     UNUSEDPARM(out);
-    fprintf(fp, "]\n"); // enclose the atomic {}'s into an []
+	sprintf_s(result_buffer, sizeof(result_buffer), "{\"status\":\"finished\", \"results\":\"%s\"}", out->masscan->map_key);
+	set((const unsigned char *)out->masscan->key, (const unsigned char *)result_buffer);
 }
 
 //{ ip: "124.53.139.201", ports: [ {port: 443, proto: "tcp", status: "open", reason: "syn-ack", ttl: 48} ] }
@@ -32,10 +39,23 @@ json_out_status(struct Output *out, FILE *fp, time_t timestamp, int status,
                unsigned ip, unsigned ip_proto, unsigned port, unsigned reason, unsigned ttl)
 {
     char reason_buffer[128];
+    char result_buffer[128];
     UNUSEDPARM(out);
     //UNUSEDPARM(timestamp);
-
-    fprintf(fp, "{ ");
+	sprintf_s(result_buffer, sizeof(result_buffer), "{\"ip\": \"%u.%u.%u.%u\", ",
+            (ip>>24)&0xFF, (ip>>16)&0xFF, (ip>> 8)&0xFF, (ip>> 0)&0xFF);
+	sprintf_s(result_buffer + strlen(result_buffer), sizeof(result_buffer), "  \"timestamp\": \"%d\", \"ports\": [ {\"port\": %u, \"proto\": \"%s\", \"status\": \"%s\","
+                " \"reason\": \"%s\", \"ttl\": %u} ] ",
+                (int) timestamp,
+                port,
+                name_from_ip_proto(ip_proto),
+                status_string(status),
+                reason_string(reason, reason_buffer, sizeof(reason_buffer)),
+                ttl
+            );
+    sprintf_s(result_buffer + strlen(result_buffer), sizeof(result_buffer), "}");
+	lpush((const unsigned char *)out->masscan->map_key, (const unsigned char *)result_buffer);
+    /*fprintf(fp, "{ ");
     fprintf(fp, "  \"ip\": \"%u.%u.%u.%u\", ",
             (ip>>24)&0xFF, (ip>>16)&0xFF, (ip>> 8)&0xFF, (ip>> 0)&0xFF);
     fprintf(fp, "  \"timestamp\": \"%d\", \"ports\": [ {\"port\": %u, \"proto\": \"%s\", \"status\": \"%s\","
@@ -47,7 +67,7 @@ json_out_status(struct Output *out, FILE *fp, time_t timestamp, int status,
                 reason_string(reason, reason_buffer, sizeof(reason_buffer)),
                 ttl
             );
-    fprintf(fp, "},\n");
+    fprintf(fp, "},\n");*/
 
 
 }
@@ -97,11 +117,23 @@ json_out_banner(struct Output *out, FILE *fp, time_t timestamp,
                const unsigned char *px, unsigned length)
 {
     char banner_buffer[65536];
+	char result_buffer[65664];
 
     UNUSEDPARM(ttl);
     //UNUSEDPARM(timestamp);
-
-    fprintf(fp, "{ ");
+	sprintf_s(result_buffer , sizeof(result_buffer), "{ ");
+    sprintf_s(result_buffer + strlen(result_buffer), sizeof(result_buffer), "  \"ip\": \"%u.%u.%u.%u\", ",
+            (ip>>24)&0xFF, (ip>>16)&0xFF, (ip>> 8)&0xFF, (ip>> 0)&0xFF);
+    sprintf_s(result_buffer + strlen(result_buffer), sizeof(result_buffer), "  \"timestamp\": \"%d\", \"ports\": [ {\"port\": %u, \"proto\": \"%s\", \"service\": {\"name\": \"%s\", \"banner\": \"%s\"} } ] ",
+            (int) timestamp,
+            port,
+            name_from_ip_proto(ip_proto),
+            masscan_app_to_string(proto),
+            normalize_json_string(px, length, banner_buffer, sizeof(banner_buffer))
+            );
+    sprintf_s(result_buffer + strlen(result_buffer), sizeof(result_buffer), "}");
+	lpush((const unsigned char *)out->masscan->map_key, (const unsigned char *)result_buffer);
+    /*fprintf(fp, "{ ");
     fprintf(fp, "  \"ip\": \"%u.%u.%u.%u\", ",
             (ip>>24)&0xFF, (ip>>16)&0xFF, (ip>> 8)&0xFF, (ip>> 0)&0xFF);
     fprintf(fp, "  \"timestamp\": \"%d\", \"ports\": [ {\"port\": %u, \"proto\": \"%s\", \"service\": {\"name\": \"%s\", \"banner\": \"%s\"} } ] ",
@@ -111,7 +143,7 @@ json_out_banner(struct Output *out, FILE *fp, time_t timestamp,
             masscan_app_to_string(proto),
             normalize_json_string(px, length, banner_buffer, sizeof(banner_buffer))
             );
-    fprintf(fp, "},\n");
+    fprintf(fp, "},\n");*/
 
     UNUSEDPARM(out);
 

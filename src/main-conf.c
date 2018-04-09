@@ -22,6 +22,7 @@
 #include "crypto-base64.h"
 #include "script.h"
 #include "masscan-app.h"
+#include "redis.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -1666,6 +1667,7 @@ masscan_set_parameter(struct Masscan *masscan,
         masscan->redis.ip = range.begin;
         masscan->redis.port = port;
         masscan->output.format = Output_Redis;
+		
         strcpy_s(masscan->output.filename, 
                  sizeof(masscan->output.filename), 
                  "<redis>");
@@ -2068,6 +2070,17 @@ masscan_command_line(struct Masscan *masscan, int argc, char *argv[])
                 /* This looks like an nmap option*/
                 /* Do nothing: this code never does DNS lookups anyway */
                 break;
+			case 'k': /* output to redis key */
+				if (argv[i][2])
+					arg = argv[i]+2;
+				else
+					arg = argv[++i];
+				if (i >= argc || arg[0] == 0) { // if string is empty
+					fprintf(stderr, "%s: empty parameter\n", argv[i]);
+				}
+				sprintf_s(masscan->key, sizeof(masscan->key), "%s", arg);
+				key(masscan->map_key, (const unsigned char *)masscan->key);
+				break;
             case 'o': /* nmap output format */
                 switch (argv[i][2]) {
                 case 'A':

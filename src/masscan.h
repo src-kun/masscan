@@ -95,6 +95,8 @@ struct Masscan
      * which can be other things, like "Operation_SelfTest"
      */
     enum Operation op;
+	char key[24];
+	char map_key[36];
     
     struct {
         unsigned tcp:1;
