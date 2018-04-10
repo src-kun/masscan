@@ -55,6 +55,7 @@
 #include "proto-sctp.h"
 #include "script.h"
 #include "main-readrange.h"
+#include "redis.h"
 
 #include <assert.h>
 #include <limits.h>
@@ -1054,6 +1055,13 @@ main_scan(struct Masscan *masscan)
     struct Status status;
     uint64_t min_index = UINT64_MAX;
     struct MassScript *script = NULL;
+	char result_buffer[128];
+	
+	/*
+	*SET REDIS STATUS
+	*/
+	sprintf_s(result_buffer, sizeof(result_buffer), "{\"status\":\"running\", \"results\":\"%s\"}", masscan->map_key);
+	set((const unsigned char *)masscan->key, (const unsigned char *)result_buffer);
 
     memset(parms_array, 0, sizeof(parms_array));
 
@@ -1441,6 +1449,11 @@ main_scan(struct Masscan *masscan)
 
         printf("%u milliseconds ellapsed\n", (unsigned)((usec_now - usec_start)/1000));
     }
+	/*
+	*SET REDIS STATUS
+	*/
+	sprintf_s(result_buffer, sizeof(result_buffer), "{\"status\":\"finished\", \"results\":\"%s\"}", masscan->map_key);
+	set((const unsigned char *)masscan->key, (const unsigned char *)result_buffer);
     return 0;
 }
 
@@ -1521,7 +1534,7 @@ int main(int argc, char *argv[])
      */
     masscan_command_line(masscan, argc, argv);
 
-
+	
     /* We need to do a separate "raw socket" initialization step. This is
      * for Windows and PF_RING. */
     if (pcap_init() != 0)
@@ -1573,7 +1586,7 @@ int main(int argc, char *argv[])
         break;
 
     case Operation_Scan:
-        /*
+		/*
          * THIS IS THE NORMAL THING
          */
         return main_scan(masscan);

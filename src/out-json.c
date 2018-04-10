@@ -13,10 +13,10 @@
 static void
 json_out_open(struct Output *out, FILE *fp)
 {
-	char result_buffer[128];
+	/*char result_buffer[128];
     UNUSEDPARM(out);
-	sprintf_s(result_buffer, sizeof(result_buffer), "{\"status\":\"running\", \"results\":\"%s\"}", out->masscan->map_key);
-	set((const unsigned char *)out->masscan->key, (const unsigned char *)result_buffer);
+	sprintf_s(result_buffer, sizeof(result_buffer), "{\"status\":\"create\", \"results\":\"%s\"}", out->masscan->map_key);
+	set((const unsigned char *)out->masscan->key, (const unsigned char *)result_buffer);*/
 }
 
 
@@ -25,10 +25,10 @@ json_out_open(struct Output *out, FILE *fp)
 static void
 json_out_close(struct Output *out, FILE *fp)
 {
-	char result_buffer[128];
+	/*char result_buffer[128];
     UNUSEDPARM(out);
 	sprintf_s(result_buffer, sizeof(result_buffer), "{\"status\":\"finished\", \"results\":\"%s\"}", out->masscan->map_key);
-	set((const unsigned char *)out->masscan->key, (const unsigned char *)result_buffer);
+	set((const unsigned char *)out->masscan->key, (const unsigned char *)result_buffer);*/
 }
 
 //{ ip: "124.53.139.201", ports: [ {port: 443, proto: "tcp", status: "open", reason: "syn-ack", ttl: 48} ] }
