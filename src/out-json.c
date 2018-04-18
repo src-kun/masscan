@@ -38,8 +38,8 @@ static void
 json_out_status(struct Output *out, FILE *fp, time_t timestamp, int status,
                unsigned ip, unsigned ip_proto, unsigned port, unsigned reason, unsigned ttl)
 {
-    char reason_buffer[128];
-    char result_buffer[128];
+    char reason_buffer[256];
+    char result_buffer[256];
     UNUSEDPARM(out);
     //UNUSEDPARM(timestamp);
 	sprintf_s(result_buffer, sizeof(result_buffer), "{\"ip\": \"%u.%u.%u.%u\", ",
@@ -117,7 +117,7 @@ json_out_banner(struct Output *out, FILE *fp, time_t timestamp,
                const unsigned char *px, unsigned length)
 {
     char banner_buffer[65536];
-	char result_buffer[65664];
+	char result_buffer[66560];
 
     UNUSEDPARM(ttl);
     //UNUSEDPARM(timestamp);
